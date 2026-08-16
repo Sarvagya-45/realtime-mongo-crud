@@ -5,7 +5,9 @@ exports.getPosts = async (req, res) => {
     const posts = await Post.find().sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -13,12 +15,14 @@ exports.createPost = async (req, res) => {
   try {
     const post = await Post.create(req.body);
 
-    // Real-time broadcast
+    // Real-time update
     req.io.emit("postCreated", post);
 
     res.status(201).json(post);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -32,11 +36,11 @@ exports.deletePost = async (req, res) => {
       });
     }
 
-    // Real-time broadcast
+    // Real-time update
     req.io.emit("postDeleted", req.params.id);
 
     res.json({
-      message: "Post Deleted",
+      message: "Post Deleted Successfully",
     });
   } catch (error) {
     res.status(500).json({
