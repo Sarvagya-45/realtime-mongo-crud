@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import socket from "./socket";
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -25,6 +26,29 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
+
+    socket.on("connect", () => {
+      console.log("Connected:", socket.id);
+    });
+
+    socket.on("postCreated", (newPost) => {
+      setPosts((prev) => {
+        const exists = prev.find((post) => post._id === newPost._id);
+
+        if (exists) return prev;
+
+        return [newPost, ...prev];
+      });
+    });
+
+    socket.on("postDeleted", (deletedId) => {
+      setPosts((prev) => prev.filter((post) => post._id !== deletedId));
+    });
+
+    return () => {
+      socket.off("postCreated");
+      socket.off("postDeleted");
+    };
   }, []);
 
   const addPost = async () => {
@@ -36,20 +60,16 @@ function App() {
         return;
       }
 
-      const res = await axios.post(API_URL, {
+      await axios.post(API_URL, {
         title,
         content,
       });
 
-      console.log("Success:", res.data);
-
       setTitle("");
       setContent("");
       setMessage("Post Added Successfully");
-
-      fetchPosts();
     } catch (error) {
-      console.error("POST Error:", error);
+      console.error(error);
       setMessage(error.response?.data?.message || "Failed to add post");
     }
   };
@@ -57,7 +77,6 @@ function App() {
   const deletePost = async (id) => {
     try {
       await axios.delete(`${API_URL}/${id}`);
-      fetchPosts();
     } catch (error) {
       console.error(error);
       setMessage("Delete failed");
@@ -66,7 +85,9 @@ function App() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Mongo CRUD App</h1>
+      <h1>Mongo CRUD App (Real-Time)</h1>
+
+      <p>Socket Status: {socket.connected ? "Connected" : "Disconnected"}</p>
 
       <input
         type="text"
