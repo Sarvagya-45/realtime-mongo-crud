@@ -8,7 +8,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const API_URL = "https://your-app.onrender.com/api/posts";
+  const API_URL = "https://mongo-crud-app-lhgo.onrender.com/api/posts";
 
   const fetchPosts = async () => {
     try {
